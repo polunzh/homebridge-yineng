@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "iconv-lite": "^0.4.15"
+    "async": "^2.2.0",
+    "iconv-lite": "^0.4.15",
+    "xml2js": "^0.4.17"
   },
   "keywords": [
     "homebridge-plugin",
