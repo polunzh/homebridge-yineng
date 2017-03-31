@@ -1,10 +1,13 @@
-let PlatformAccessory, Service, Characteristic, UUIDGen;
+let PlatformAccessory, Service, Characteristic, UUIDGen, Kelvin;
+const inherits = require('util').inherits;
 const dgram = require('dgram');
 const iconv = require('iconv-lite');
 const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
+
+const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
 
 const CONTROL_ID = "1"
 const devices = [{
@@ -15,6 +18,10 @@ const devices = [{
   id: 2,
   name: '普通回路',
   type: 1001,
+}, {
+  id: 1,
+  name: '色温',
+  type: 1008,
 }]
 
 module.exports = function (homebridge) {
@@ -28,8 +35,44 @@ module.exports = function (homebridge) {
   Characteristic = homebridge.hap.Characteristic;
   UUIDGen = homebridge.hap.uuid;
 
-  // For platform plugin to be considered as dynamic platform plugin,
-  // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
+  Kelvin = function () {
+    Characteristic.call(this, 'Kelvin', UUID_KELVIN)
+
+    this.setProps({
+      format: Characteristic.Formats.UINT16,
+      unit: 'K',
+      maxValue: 9000,
+      minValue: 2500,
+      minStep: 250,
+      perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
+    });
+
+    this.value = this.getDefaultValue();
+  };
+  inherits(Kelvin, Characteristic);
+
+  Kelvin.UUID = UUID_KELVIN;
+
+  Characteristic.ColorTemperature = function () {
+    Characteristic.call(
+      this, 'Color Temperature', Characteristic.ColorTemperature.UUID
+    );
+    this.setProps({
+      format: Characteristic.Formats.INT,
+      unit: 'K',
+      minValue: 2000,
+      maxValue: 6536,
+      stepValue: 1,
+      perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY,
+        Characteristic.Perms.WRITE
+      ]
+    });
+    this.value = this.getDefaultValue();
+  };
+  inherits(Characteristic.ColorTemperature, Characteristic);
+  Characteristic.ColorTemperature.UUID = 'A18E5901-CFA1-4D37-A10F-0071CEEEEEBD';
+
+
   homebridge.registerPlatform("homebridge-yineng", "Yineng", YinengPlatform, true);
 }
 
@@ -109,12 +152,16 @@ YinengPlatform.prototype.addAccessory = function () {
 
     switch (device.type) {
       case 1001:
-        break;
+        break
       case 1005:
         service.addCharacteristic(Characteristic.Brightness);
         break
       case 1008:
-        break;
+        // service.addCharacteristic(Kelvin)
+        service.addCharacteristic(Characteristic.Hue);
+        service.addCharacteristic(Characteristic.Saturation);
+        // service.addOptionalCharacteristic(Characteristic.ColorTemperature);
+        break
     }
 
     this.accessories[accessory.UUID] = new YinengAccessory(device, accessory, this.log);
@@ -152,14 +199,41 @@ YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
           maxValue: 100
         })
         .on('set', this.setBrightness.bind(this))
+      break
+    case Kelvin:
+      service
+        .getCharacteristic(Kelvin)
+        .on('set', this.setSaturation.bind(this))
+      break
+    case Characteristic.Hue:
+      service
+        .getCharacteristic(Characteristic.Hue)
+        .on('set', this.setSaturation.bind(this))
+      break
+    case Characteristic.Saturation:
+      service
+        .getCharacteristic(Characteristic.Saturation)
+        .on('set', this.setSaturation.bind(this))
+      break
+    case Characteristic.ColorTemperature:
+      service.getCharacteristic(Characteristic.ColorTemperature)
+        .on('set', this.setSaturation.bind(this))
+        .setProps({
+          minValue: "01",
+          maxValue: "100"
+        })
 
-      break;
+      break
   }
 }
 
 YinengAccessory.prototype.addEventHandlers = function () {
   this.addEventHandler(Service.Lightbulb, Characteristic.On)
   this.addEventHandler(Service.Lightbulb, Characteristic.Brightness)
+  this.addEventHandler(Service.Lightbulb, Kelvin)
+  this.addEventHandler(Service.Lightbulb, Characteristic.Hue)
+  this.addEventHandler(Service.Lightbulb, Characteristic.Saturation)
+  this.addEventHandler(Service.Lightbulb, Characteristic.ColorTemperature)
 }
 
 YinengPlatform.prototype.updateAccessoriesReachability = function () {
@@ -229,6 +303,39 @@ YinengAccessory.prototype.setValue = function (value, callback) {
 
 YinengAccessory.prototype.setBrightness = function (value, callback) {
   this.log('Set brightness > ' + d2h(value))
+  const segment = {
+    "request": {
+      "version": 1,
+      "serial_id": 123,
+      "from": "00000001",
+      "to": "317A5167",
+      "request_id": 3002,
+      "password": "172168",
+      "ack": 1,
+      "arguments": [{
+        "id": this.device.id,
+        "state": d2h(value)
+      }]
+    }
+  }
+
+  const client = dgram.createSocket('udp4')
+  client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+    if (err) throw err;
+  })
+
+  client.on('message', function (message, remote) {
+    const messageJSON = JSON.parse(message.toString()).result
+    if (messageJSON.code) {
+      console.log('err:' + messageJSON.code)
+    }
+    client.close()
+    callback()
+  })
+}
+
+YinengAccessory.prototype.setSaturation = function (value, callback) {
+  this.log('Set saturation > ' + d2h(value))
   const segment = {
     "request": {
       "version": 1,
