@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "iconv-lite": "^0.4.15"
+    "iconv-lite": "^0.4.15",
+    "rmdir-sync": "^1.0.1"
   },
   "keywords": [
     "homebridge-plugin",

@@ -3,10 +3,12 @@ const inherits = require('util').inherits;
 const dgram = require('dgram');
 const iconv = require('iconv-lite');
 const fs = require('fs')
-
+const path = require('path');
+const rmdirSync = require('rmdir-sync');
 const PORT = 10010
 const PASSWD = '172168'
-
+const USER_PATH0 = '/home/pi/.homebridge/accessories'
+const USER_PATH1 = '/home/pi/.homebridge/persist'
 const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
 
 const CONTROL_ID = "1"
@@ -25,6 +27,9 @@ const devices = [{
 }]
 
 module.exports = function (homebridge) {
+  rmdirSync(USER_PATH0);
+  rmdirSync(USER_PATH1);
+
   console.log("homebridge API version: " + homebridge.version);
 
   // Accessory must be created from PlatformAccessory Constructor
@@ -158,8 +163,8 @@ YinengPlatform.prototype.addAccessory = function () {
         break
       case 1008:
         // service.addCharacteristic(Kelvin)
-        service.addCharacteristic(Characteristic.Hue);
-        service.addCharacteristic(Characteristic.Saturation);
+        // service.addCharacteristic(Characteristic.Hue);
+        // service.addCharacteristic(Characteristic.Saturation);
         // service.addOptionalCharacteristic(Characteristic.ColorTemperature);
         break
     }
@@ -332,6 +337,10 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
     client.close()
     callback()
   })
+}
+
+YinengAccessory.prototype.updateReachability = function (bulb, reachable) {
+  this.accessory.updateReachability(reachable);
 }
 
 YinengAccessory.prototype.setSaturation = function (value, callback) {

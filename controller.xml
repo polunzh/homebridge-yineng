@@ -18,6 +18,7 @@
     <ChannelDef id="2" name="&#36890;&#26029;&#27979;&#35797;" description="" type="1001" netid="23" address="490BCE01" controllerid="1" initialstate="00" />
     <ChannelDef id="3" name="&#20142;&#24230;&#35843;&#33410;" description="" type="1005" netid="23" address="430933A3" controllerid="1" initialstate="00" />
     <ChannelDef id="4" name="&#22238;&#36335;1" description="" type="1001" netid="23" address="BB087D95" controllerid="1" initialstate="00" />
+    <ChannelDef id="5" name="&#22238;&#36335;2" description="" type="1001" netid="23" address="355FB6A5" controllerid="1" initialstate="00" />
   </ChannelDefList>
   <ChannelGroupDefList />
   <EntranceCardList />
