@@ -1,0 +1,23 @@
+{
+  "name": "homebridge-yineng",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "iconv-lite": "^0.4.15"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "yineng",
+    "smart bulb"
+  ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  }
+}
