@@ -4,6 +4,7 @@ const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
+const IP = '192.168.10.192'
 
 function findController() {
     const client = dgram.createSocket('udp4')
@@ -19,7 +20,7 @@ function findController() {
         }
     }
 
-    client.send(JSON.stringify(segment), PORT, '192.168.0.255', (err) => {
+    client.send(JSON.stringify(segment), PORT, '192.168.10.255', (err) => {
         if (err) throw err;
     })
 
@@ -54,7 +55,7 @@ function readConfig() {
     }
 
     const client = dgram.createSocket('udp4')
-    client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+    client.send(JSON.stringify(segment), PORT, IP, (err) => {
         if (err) throw err;
     })
 
@@ -154,9 +155,9 @@ function setStaticIP() {
                 "interface": 1,
                 "mode": "static",
                 "addr": {
-                    "ip": "192.168.0.124",
+                    "ip": "192.168.10.124",
                     "netmask": "255.255.255.0",
-                    "gateway": "192.168.0.1",
+                    "gateway": "192.168.10.1",
                 }
             }
         }
@@ -177,9 +178,10 @@ function setStaticIP() {
 }
 
 // findController()
-// readConfig()
+readConfig()
 // controlScene(1)
 // controlUnit()
 // var biz_content = "欢迎关注！";
 // var gbkBytes = iconv.encode(biz_content, 'gbk');
 // console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'))
+// setStaticIP()

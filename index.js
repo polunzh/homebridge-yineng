@@ -27,9 +27,6 @@ const devices = [{
 }]
 
 module.exports = function (homebridge) {
-  rmdirSync(USER_PATH0);
-  rmdirSync(USER_PATH1);
-
   console.log("homebridge API version: " + homebridge.version);
 
   // Accessory must be created from PlatformAccessory Constructor
