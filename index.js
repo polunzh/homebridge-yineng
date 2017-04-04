@@ -5,11 +5,12 @@ const iconv = require('iconv-lite');
 const fs = require('fs')
 const path = require('path');
 const rmdirSync = require('rmdir-sync');
+
+const IP = '192.168.10.192'
 const PORT = 10010
 const PASSWD = '172168'
-const USER_PATH0 = '/home/pi/.homebridge/accessories'
-const USER_PATH1 = '/home/pi/.homebridge/persist'
-const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
+const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA'
+const PLATFORM_NAME = 'Yineng'
 
 const CONTROL_ID = "1"
 const devices = [{
@@ -29,10 +30,7 @@ const devices = [{
 module.exports = function (homebridge) {
   console.log("homebridge API version: " + homebridge.version);
 
-  // Accessory must be created from PlatformAccessory Constructor
   PlatformAccessory = homebridge.platformAccessory;
-
-  // Service and Characteristic are from hap-nodejs
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
   UUIDGen = homebridge.hap.uuid;
@@ -75,12 +73,9 @@ module.exports = function (homebridge) {
   Characteristic.ColorTemperature.UUID = 'A18E5901-CFA1-4D37-A10F-0071CEEEEEBD';
 
 
-  homebridge.registerPlatform("homebridge-yineng", "Yineng", YinengPlatform, true);
+  homebridge.registerPlatform("homebridge-yineng", PLATFORM_NAME, YinengPlatform, true);
 }
 
-// Platform constructor
-// config may be null
-// api may be null if launched from old homebridge version
 function YinengPlatform(log, config, api) {
   log("YinengPlatform Init");
   var platform = this;
@@ -99,7 +94,8 @@ function YinengPlatform(log, config, api) {
 }
 
 YinengPlatform.prototype.configureAccessory = function (accessory) {
-  accessory.updateReachability(false);
+  // accessory.updateReachability(false);
+  console.log('------------')
   this.accessories[accessory.UUID] = accessory;
 }
 
@@ -111,7 +107,7 @@ YinengPlatform.prototype.configurationRequestHandler = function (context, reques
     this.addAccessory(request.response.inputs.name);
 
     callback(null, "platform", true, {
-      "platform": "YinengPlatform",
+      "platform": PLATFORM_NAME,
       "otherConfig": "SomeData"
     });
     return;
@@ -136,39 +132,43 @@ YinengPlatform.prototype.configurationRequestHandler = function (context, reques
 YinengPlatform.prototype.addAccessory = function () {
   this.log("Add Accessory");
   const platform = this;
-  devices.forEach((device, idx) => {
-    let uuid;
-    uuid = UUIDGen.generate(CONTROL_ID + device.id);
-
-    let accessory = new PlatformAccessory(device.name, uuid);
-
-    accessory.context.name = device.name
-    accessory.context.make = "Yineng"
-    accessory.context.model = "Unknown"
-
-    accessory.getService(Service.AccessoryInformation)
-      .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
-      .setCharacteristic(Characteristic.Model, accessory.context.model)
-
-    const service = accessory.addService(Service.Lightbulb, device.name)
-
-    switch (device.type) {
-      case 1001:
-        break
-      case 1005:
-        service.addCharacteristic(Characteristic.Brightness);
-        break
-      case 1008:
-        // service.addCharacteristic(Kelvin)
-        // service.addCharacteristic(Characteristic.Hue);
-        // service.addCharacteristic(Characteristic.Saturation);
-        // service.addOptionalCharacteristic(Characteristic.ColorTemperature);
-        break
-    }
-
-    this.accessories[accessory.UUID] = new YinengAccessory(device, accessory, this.log);
-    this.api.registerPlatformAccessories("homebridge-yineng", "YinengPlatform", [accessory]);
+  this.accessories.forEach((val) => {
+    console.log('-------------')
+    console.log(val)
   })
+  // devices.forEach((device, idx) => {
+  //   let uuid;
+  //   uuid = UUIDGen.generate(CONTROL_ID + device.id);
+
+  //   let accessory = new PlatformAccessory(device.name, uuid);
+
+  //   accessory.context.name = device.name
+  //   accessory.context.make = "Yineng"
+  //   accessory.context.model = "Unknown"
+
+  //   accessory.getService(Service.AccessoryInformation)
+  //     .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
+  //     .setCharacteristic(Characteristic.Model, accessory.context.model)
+
+  //   const service = accessory.addService(Service.Lightbulb, device.name)
+
+  //   switch (device.type) {
+  //     case 1001:
+  //       break
+  //     case 1005:
+  //       service.addCharacteristic(Characteristic.Brightness);
+  //       break
+  //     case 1008:
+  //       // service.addCharacteristic(Kelvin)
+  //       // service.addCharacteristic(Characteristic.Hue);
+  //       // service.addCharacteristic(Characteristic.Saturation);
+  //       // service.addOptionalCharacteristic(Characteristic.ColorTemperature);
+  //       break
+  //   }
+
+  //   this.accessories[accessory.UUID] = new YinengAccessory(device, accessory, this.log);
+  //   this.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
+  // })
 }
 
 YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
@@ -248,7 +248,7 @@ YinengPlatform.prototype.updateAccessoriesReachability = function () {
 
 YinengPlatform.prototype.removeAccessory = function () {
   this.log("Remove Accessory");
-  this.api.unregisterPlatformAccessories("homebridge-yineng", "YinengPlatform", this.accessories);
+  this.api.unregisterPlatformAccessories("homebridge-yineng", PLATFORM_NAME, this.accessories);
 
   this.accessories = [];
 }
@@ -289,7 +289,7 @@ YinengAccessory.prototype.setValue = function (value, callback) {
   }
 
   const client = dgram.createSocket('udp4')
-  client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+  client.send(JSON.stringify(segment), PORT, IP, (err) => {
     if (err) throw err;
   })
 
@@ -322,7 +322,7 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
   }
 
   const client = dgram.createSocket('udp4')
-  client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+  client.send(JSON.stringify(segment), PORT, IP, (err) => {
     if (err) throw err;
   })
 
@@ -359,7 +359,7 @@ YinengAccessory.prototype.setSaturation = function (value, callback) {
   }
 
   const client = dgram.createSocket('udp4')
-  client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+  client.send(JSON.stringify(segment), PORT, IP, (err) => {
     if (err) throw err;
   })
 
