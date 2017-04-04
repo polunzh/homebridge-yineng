@@ -61,6 +61,7 @@ function readConfig() {
 
     let configFile = {};
     client.on('message', function (message, remote) {
+        console.log('---------received message----------')
         const messageJSON = JSON.parse(message.toString()).result
         configFile[messageJSON.packet_num] = messageJSON.data
 
@@ -78,7 +79,7 @@ function readConfig() {
     setTimeout(() => {
         client.close()
         throw new Error('read config file timeout')
-    }, 5000)
+    }, 10000)
 }
 
 function controlScene(sceneId) {
@@ -107,7 +108,6 @@ function controlScene(sceneId) {
         console.log(JSON.parse(message.toString()))
         client.close()
     })
-
 }
 
 function controlUnit() {
@@ -174,14 +174,48 @@ function setStaticIP() {
         console.log(JSON.parse(message.toString()))
         client.close()
     })
-
 }
 
+function queryStatus(sceneId) {
+    const segment = {
+        "request": {
+            "version": 1,
+            "serial_id": 123,
+            "from": "00000001",
+            "to": "317A5167",
+            "request_id": 4001,
+            "password": "172168",
+            "ack": 1,
+            "arguments": 4
+        }
+    }
+
+
+
+    const client = dgram.createSocket('udp4')
+    client.send(JSON.stringify(segment), PORT, IP, (err) => {
+        if (err) throw err;
+    })
+
+    client.on('message', function (message, remote) {
+        const messageJSON = JSON.parse(message.toString()).result
+        console.log(messageJSON.data)
+        client.close()
+    })
+
+    client.on('error', (err) => {
+        console.log('ERROR: \n')
+        console.log(err);
+    })
+}
+
+
 // findController()
-readConfig()
+// readConfig()
 // controlScene(1)
 // controlUnit()
 // var biz_content = "欢迎关注！";
 // var gbkBytes = iconv.encode(biz_content, 'gbk');
 // console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'))
 // setStaticIP()
+queryStatus()
