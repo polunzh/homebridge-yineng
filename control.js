@@ -4,7 +4,7 @@ const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
-const IP = '192.168.10.192'
+const IP = '192.168.0.107'
 
 function findController() {
     const client = dgram.createSocket('udp4')
@@ -211,11 +211,11 @@ function queryStatus(sceneId) {
 
 
 // findController()
-// readConfig()
+readConfig()
 // controlScene(1)
 // controlUnit()
 // var biz_content = "欢迎关注！";
 // var gbkBytes = iconv.encode(biz_content, 'gbk');
 // console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'))
 // setStaticIP()
-queryStatus()
+// queryStatus()

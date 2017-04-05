@@ -6,29 +6,29 @@ const fs = require('fs')
 const path = require('path');
 const rmdirSync = require('rmdir-sync');
 
-const IP = '192.168.10.192'
-const PORT = 10010
-const PASSWD = '172168'
-const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA'
-const PLATFORM_NAME = 'Yineng'
+let IP;
+let PORT;
+let PASSWD;
+const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
+const PLATFORM_NAME = 'Yineng';
 
-const CONTROL_ID = "1"
-const devices = [{
-  id: 2,
-  address: '1C06FBA1',
-  name: '调光/调色温',
-  type: 1008,
-}, {
-  id: 3,
-  address: '430933A3',
-  name: '调光',
-  type: 1005,
-}, {
-  id: 4,
-  address: '490BCE01',
-  name: '普通回路',
-  type: 1001,
-}]
+let CONTROL_ID;
+// const devices = [{
+//   id: 2,
+//   address: '1C06FBA1',
+//   name: '调光/调色温',
+//   type: 1008,
+// }, {
+//   id: 3,
+//   address: '430933A3',
+//   name: '调光',
+//   type: 1005,
+// }, {
+//   id: 4,
+//   address: '490BCE01',
+//   name: '普通回路',
+//   type: 1001,
+// }];
 
 module.exports = function (homebridge) {
   console.log("homebridge API version: " + homebridge.version);
@@ -81,9 +81,14 @@ module.exports = function (homebridge) {
 function YinengPlatform(log, config, api) {
   log("YinengPlatform Init");
   var platform = this;
-  this.log = log
+  this.log = log;
   this.config = config;
-  this.accessories = []
+  this.accessories = [];
+
+  IP = this.config.ip;
+  PORT = this.config.port;
+  PASSWD = this.config.password;
+  CONTROL_ID = this.config.controlId;
 
   if (api) {
     this.api = api
@@ -155,7 +160,7 @@ YinengPlatform.prototype.addAccessory = function () {
   this.log("Add Accessory")
   const platform = this
   const existsKeys = Object.keys(this.accessories)
-  devices.forEach((device) => {
+  this.config.devices.forEach((device) => {
     const uuid = UUIDGen.generate(CONTROL_ID + device.address)
     const existKey = existsKeys.find((key) => {
       return uuid === key
@@ -179,7 +184,7 @@ YinengPlatform.prototype.addAccessory = function () {
       let service;
       switch (device.type) {
         case 1001:
-          service = accessory.addService(Service.Switch, device.name);
+          service = accessory.addService(Service.Lightbulb, device.name);
           break;
         case 1005:
           service = accessory.addService(Service.Lightbulb, device.name);
@@ -225,31 +230,31 @@ YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
         })
         .on('set', this.setBrightness.bind(this));
       break;
-    // case Kelvin:
-    //   service
-    //     .getCharacteristic(Kelvin)
-    //     .on('set', this.setSaturation.bind(this));
+      // case Kelvin:
+      //   service
+      //     .getCharacteristic(Kelvin)
+      //     .on('set', this.setSaturation.bind(this));
 
-    //   break;
-    // case Characteristic.Hue:
-    //   service
-    //     .getCharacteristic(Characteristic.Hue)
-    //     .on('set', this.setSaturation.bind(this));
-    //   break;
-    // case Characteristic.Saturation:
-    //   service
-    //     .getCharacteristic(Characteristic.Saturation)
-    //     .on('set', this.setSaturation.bind(this));
-    //   break;
-    // case Characteristic.ColorTemperature:
-    //   service.getCharacteristic(Characteristic.ColorTemperature)
-    //     .on('set', this.setSaturation.bind(this))
-    //     .setProps({
-    //       minValue: "01",
-    //       maxValue: "100"
-    //     });
+      //   break;
+      // case Characteristic.Hue:
+      //   service
+      //     .getCharacteristic(Characteristic.Hue)
+      //     .on('set', this.setSaturation.bind(this));
+      //   break;
+      // case Characteristic.Saturation:
+      //   service
+      //     .getCharacteristic(Characteristic.Saturation)
+      //     .on('set', this.setSaturation.bind(this));
+      //   break;
+      // case Characteristic.ColorTemperature:
+      //   service.getCharacteristic(Characteristic.ColorTemperature)
+      //     .on('set', this.setSaturation.bind(this))
+      //     .setProps({
+      //       minValue: "01",
+      //       maxValue: "100"
+      //     });
 
-    //   break;
+      //   break;
   }
 }
 
