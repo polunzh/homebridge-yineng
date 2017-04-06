@@ -13,6 +13,7 @@ const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
 const PLATFORM_NAME = 'Yineng';
 
 let CONTROL_ID;
+let CONTROLLER_ADDRESS;
 // const devices = [{
 //   id: 2,
 //   address: '1C06FBA1',
@@ -89,6 +90,7 @@ function YinengPlatform(log, config, api) {
   PORT = this.config.port;
   PASSWD = this.config.password;
   CONTROL_ID = this.config.controlId;
+  CONTROLLER_ADDRESS = this.config.controllerAddress;
 
   if (api) {
     this.api = api
@@ -183,16 +185,19 @@ YinengPlatform.prototype.addAccessory = function () {
 
       let service;
       switch (device.type) {
-        case 1001:
+        case '1001':
           service = accessory.addService(Service.Lightbulb, device.name);
           break;
-        case 1005:
+        case '1005':
           service = accessory.addService(Service.Lightbulb, device.name);
           service.addCharacteristic(Characteristic.Brightness);
           break
-        case 1008:
+        case '1008':
           service = accessory.addService(Service.Lightbulb, device.name);
-          break
+          break;
+        case '1007':
+          service = accessory.addService(Service.Switch, device.name);
+          break;
       }
 
       this.accessories[accessory.UUID] = new YinengAccessory(device, accessory, this.log);
@@ -229,6 +234,12 @@ YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
           maxValue: 100
         })
         .on('set', this.setBrightness.bind(this));
+      break;
+    case Characteristic.Switch:
+      service.getCharacteristic(Characteristic.witch)
+        .on('get', this.getPower.bind(this))
+        .on('set', this.setValue.bind(this));
+
       break;
       // case Kelvin:
       //   service
@@ -290,16 +301,20 @@ YinengAccessory.prototype.setValue = function (value, callback) {
     return;
   }
 
-  self.log('Set value > ' + (value ? "FF" : "0"));
 
+  if (this.device.type === '1007') {
+    value = value ? 'FA' : 'FB'
+  } else {
+    value = value ? "FF" : "0";
+  }
+  self.log('Set value > ' + value);
   const segment = getSegment({
     requestId: 3002,
     arguments: [{
-      "id": self.device.id,
-      "state": value ? "FF" : "0"
+      "id": Number(self.device.id),
+      "state": value
     }]
   });
-
   const client = dgram.createSocket('udp4');
   client.send(JSON.stringify(segment), PORT, IP, (err) => {
     if (err) throw err;
@@ -329,7 +344,7 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
   const segment = getSegment({
     requestId: 3002,
     arguments: [{
-      "id": this.device.id,
+      "id": Number(this.device.id),
       "state": d2h(value)
     }]
   });
@@ -363,7 +378,7 @@ YinengAccessory.prototype.getPower = function (callback) {
   const self = this;
   const segment = getSegment({
     requestId: 4001,
-    arguments: this.device.id
+    arguments: Number(this.device.id)
   });
 
   const client = dgram.createSocket('udp4')
@@ -399,7 +414,7 @@ function getSegment(option) {
       "version": 1,
       "serial_id": 123,
       "from": "00000001",
-      "to": "317A5167",
+      "to": CONTROLLER_ADDRESS,
       "request_id": option.requestId,
       "password": "172168",
       "ack": 1,
@@ -415,7 +430,7 @@ YinengAccessory.prototype.setSaturation = function (value, callback) {
   const segment = getSegment({
     requestId: 3002,
     arguments: [{
-      "id": this.device.id,
+      "id": Number(this.device.id),
       "state": d2h(value)
     }]
   });

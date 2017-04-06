@@ -1,0 +1,381 @@
+<?xml version='1.0' encoding='GB2312' standalone='yes' ?><Configurations version="ffffffff850ab713" xmlns="http://www.zieneng.com">
+  <NtpServer addr="0.openwrt.pool.ntp.org" />
+  <ControllerDefList>
+    <ControllerDef id="1" name="&#25511;&#21046;&#22120;1" description="" ip="192.168.199.213" port="10010" password="172168" address="328C5159" default="yes" />
+  </ControllerDefList>
+  <SensorDefList>
+    <SensorDef id="3" name="&#23458;&#21381;&#24320;&#20851;" description="" type="105" address="98210F00" model="1" model1="-1" controllerid="1" />
+    <SensorDef id="4" name="&#39184;&#21381;&#24320;&#20851;" description="" type="105" address="8D214E00" model="1" model1="-1" controllerid="1" />
+    <SensorDef id="5" name="VR&#23627;&#24320;&#20851;" description="" type="105" address="96210401" model="2" model1="-1" controllerid="1" />
+    <SensorDef id="6" name="&#21416;&#25151;&#24320;&#20851;" description="" type="105" address="96213401" model="1" model1="-1" controllerid="1" />
+    <SensorDef id="7" name="&#21355;&#29983;&#38388;&#24320;&#20851;" description="" type="105" address="8D210400" model="2" model1="-1" controllerid="1" />
+    <SensorDef id="8" name="&#23458;&#21381;&#31383;&#24088;&#24320;&#20851;" description="" type="105" address="9621C800" model="1" model1="-1" controllerid="1" />
+  </SensorDefList>
+  <ChannelDefList>
+    <ChannelDef id="1" name="&#31383;&#24088;1" description="" type="1007" netid="23" address="1F021654" controllerid="1" initialstate="FF" />
+    <ChannelDef id="2" name="&#31383;&#24088;2" description="" type="1007" netid="23" address="A9038A3D" controllerid="1" initialstate="FF" />
+    <ChannelDef id="3" name="&#31383;&#24088;3" description="" type="1007" netid="23" address="BC03887A" controllerid="1" initialstate="FF" />
+    <ChannelDef id="4" name="&#31383;&#24088;4" description="" type="1007" netid="23" address="4201A928" controllerid="1" initialstate="FF" />
+    <ChannelDef id="5" name="&#20027;&#21351;&#20027;&#28783;" description="" type="1001" netid="23" address="EB058612" controllerid="1" initialstate="00" />
+    <ChannelDef id="6" name="&#39184;&#21381;&#20027;&#28783;" description="" type="1001" netid="23" address="4307A5A4" controllerid="1" initialstate="FF" />
+    <ChannelDef id="7" name="&#27425;&#21351;&#20027;&#28783;" description="" type="1001" netid="23" address="490BCE01" controllerid="1" initialstate="00" />
+    <ChannelDef id="9" name="&#23458;&#21381;&#31570;&#28783;5" description="" type="1008" netid="23" address="0F06972D" controllerid="1" initialstate="00" />
+    <ChannelDef id="10" name="&#36208;&#24266;&#28783;3" description="" type="1008" netid="23" address="1C058649" controllerid="1" initialstate="00" />
+    <ChannelDef id="11" name="&#23458;&#21381;&#31570;&#28783;2" description="" type="1008" netid="23" address="0F06972C" controllerid="1" initialstate="00" />
+    <ChannelDef id="12" name="&#36208;&#24266;&#31570;&#28783;2" description="" type="1008" netid="23" address="4307ABC8" controllerid="1" initialstate="00" />
+    <ChannelDef id="13" name="&#23458;&#21381;&#31570;&#28783;3" description="" type="1008" netid="23" address="BB06F9F6" controllerid="1" initialstate="00" />
+    <ChannelDef id="14" name="&#23458;&#21381;&#31570;&#28783;1" description="" type="1008" netid="23" address="630889D0" controllerid="1" initialstate="00" />
+    <ChannelDef id="15" name="&#36208;&#24266;&#31570;&#28783;1" description="" type="1008" netid="23" address="63088994" controllerid="1" initialstate="FF" />
+    <ChannelDef id="16" name="&#23458;&#21381;&#31570;&#28783;4" description="" type="1008" netid="23" address="BB06F96F" controllerid="1" initialstate="00" />
+    <ChannelDef id="17" name="&#38236;&#21069;&#28783;" description="" type="1001" netid="23" address="0F081A86" controllerid="1" initialstate="00" />
+    <ChannelDef id="18" name="&#39184;&#21381;&#31570;&#28783;2" description="" type="1008" netid="23" address="0F06971A" controllerid="1" initialstate="00" />
+    <ChannelDef id="19" name="&#39184;&#21381;&#31570;&#28783;3" description="" type="1008" netid="23" address="EB058B97" controllerid="1" initialstate="00" />
+    <ChannelDef id="20" name="&#39184;&#21381;&#31570;&#28783;1" description="" type="1008" netid="23" address="1C05862C" controllerid="1" initialstate="00" />
+    <ChannelDef id="21" name="&#39184;&#21381;&#31570;&#28783;5" description="" type="1008" netid="23" address="BC09E0B0" controllerid="1" initialstate="00" />
+    <ChannelDef id="22" name="&#39184;&#21381;&#31570;&#28783;4" description="" type="1008" netid="23" address="BC09E0EE" controllerid="1" initialstate="00" />
+    <ChannelDef id="23" name="&#21416;&#25151;&#28783;1" description="" type="1001" netid="23" address="1C06FA89" controllerid="1" initialstate="00" />
+    <ChannelDef id="24" name="&#21416;&#25151;&#28783;2" description="" type="1001" netid="23" address="0208AAAE" controllerid="1" initialstate="00" />
+    <ChannelDef id="25" name="&#23458;&#21381;&#20027;&#28783;" description="" type="1001" netid="23" address="BB087E96" controllerid="1" initialstate="00" />
+    <ChannelDef id="26" name="&#22238;&#36335;1" description="" type="1001" netid="23" address="630A0445" controllerid="1" initialstate="00" />
+  </ChannelDefList>
+  <ChannelGroupDefList />
+  <EntranceCardList />
+  <ChannelTemplateList />
+  <CtAreaDefList />
+  <ControlMatchList>
+    <ControlMatch id="1" name="" description="" type="4004">
+      <ChannelList>
+        <Channel refid="21" />
+        <Channel refid="22" />
+        <Channel refid="19" />
+        <Channel refid="20" />
+        <Channel refid="18" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="4">
+          <Eventlogic value="02">
+            <Param value1="30">
+              <State value="FD" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="4">
+          <Eventlogic value="02">
+            <Param value1="10">
+              <State value="FC" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="2" name="" description="" type="4004">
+      <ChannelList>
+        <Channel refid="11" />
+        <Channel refid="13" />
+        <Channel refid="9" />
+        <Channel refid="12" />
+        <Channel refid="14" />
+        <Channel refid="10" />
+        <Channel refid="16" />
+        <Channel refid="15" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="3">
+          <Eventlogic value="02">
+            <Param value1="30">
+              <State value="FD" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="3">
+          <Eventlogic value="02">
+            <Param value1="10">
+              <State value="FC" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="3" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="24" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="6">
+          <Eventlogic value="01">
+            <Param value1="30">
+              <State value="00" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="6">
+          <Eventlogic value="01">
+            <Param value1="10">
+              <State value="FF" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="4" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="6" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="4">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="00" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="4">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="FF" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="5" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="23" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="6">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="00" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="6">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="FF" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="6" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="25" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="3">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="00" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="3">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="FF" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="7" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="17" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="7">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="7">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="7">
+          <Eventlogic value="01">
+            <Param value1="30">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="7">
+          <Eventlogic value="01">
+            <Param value1="10">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="8" name="" description="" type="4003">
+      <ChannelList>
+        <Channel refid="3" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="8">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="FB" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="8">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="FA" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="9" name="" description="" type="4003">
+      <ChannelList>
+        <Channel refid="4" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="8">
+          <Eventlogic value="01">
+            <Param value1="30">
+              <State value="FB" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="8">
+          <Eventlogic value="01">
+            <Param value1="10">
+              <State value="FA" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+    <ControlMatch id="10" name="" description="" type="4001">
+      <ChannelList>
+        <Channel refid="26" />
+      </ChannelList>
+      <ControllingSensors>
+        <Sensor refid="5">
+          <Eventlogic value="01">
+            <Param value1="70">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="5">
+          <Eventlogic value="01">
+            <Param value1="50">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="5">
+          <Eventlogic value="01">
+            <Param value1="30">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+        <Sensor refid="5">
+          <Eventlogic value="01">
+            <Param value1="10">
+              <State value="F0" />
+            </Param>
+          </Eventlogic>
+        </Sensor>
+      </ControllingSensors>
+    </ControlMatch>
+  </ControlMatchList>
+  <SceneList>
+    <Scene id="1" name="&#20840;&#24320;" description="" enabled="yes">
+      <ChannelList />
+      <ControllingSensors />
+    </Scene>
+    <Scene id="2" name="&#20840;&#20851;" description="" enabled="yes">
+      <ChannelList />
+      <ControllingSensors />
+    </Scene>
+    <Scene id="9" name="&#26202;&#39184;&#27169;&#24335;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="9" state="00" />
+        <Channel refid="10" state="00" />
+        <Channel refid="11" state="20" />
+        <Channel refid="12" state="00" />
+        <Channel refid="6" state="00" />
+        <Channel refid="13" state="00" />
+        <Channel refid="14" state="20" />
+        <Channel refid="15" state="00" />
+        <Channel refid="16" state="00" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="12" name="&#30005;&#35270;&#27169;&#24335;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="9" state="20" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="13" name="1" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="6" state="FF" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="14" name="&#30465;&#30005;&#27169;&#24335;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="16" state="20" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="15" name="&#24320;&#21351;&#23460;&#28783;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="15" state="00" />
+        <Channel refid="16" state="20" />
+        <Channel refid="5" state="00" />
+        <Channel refid="6" state="00" />
+        <Channel refid="7" state="00" />
+        <Channel refid="9" state="00" />
+        <Channel refid="10" state="00" />
+        <Channel refid="11" state="00" />
+        <Channel refid="12" state="00" />
+        <Channel refid="13" state="00" />
+        <Channel refid="14" state="00" />
+        <Channel refid="17" state="00" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="16" name="&#20851;&#21351;&#23460;&#28783;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="5" state="00" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="17" name="3" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="17" state="00" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="18" name="&#24320;&#21355;&#29983;&#38388;&#28783;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="17" state="FF" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+    <Scene id="19" name="&#20851;&#21355;&#29983;&#38388;&#28783;" description="" enabled="yes">
+      <ChannelList>
+        <Channel refid="17" state="00" />
+      </ChannelList>
+      <ControllingSensors />
+    </Scene>
+  </SceneList>
+  <AreaList />
+  <BlockingList />
+</Configurations>

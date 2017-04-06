@@ -4,7 +4,8 @@ const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
-const IP = '192.168.0.107'
+const IP = '192.168.199.213'
+const CONTROLLER_ADDRESS = '328C5159'
 
 function findController() {
     const client = dgram.createSocket('udp4')
@@ -20,7 +21,7 @@ function findController() {
         }
     }
 
-    client.send(JSON.stringify(segment), PORT, '192.168.10.255', (err) => {
+    client.send(JSON.stringify(segment), PORT, '192.168.199.255', (err) => {
         if (err) throw err;
     })
 
@@ -46,7 +47,7 @@ function readConfig() {
             "version": 1,
             "serial_id": 123,
             "from": "00000001",
-            "to": "317A5167",
+            "to": CONTROLLER_ADDRESS,
             "request_id": 2001,
             "ack": 1,
             "password": PASSWD,
@@ -209,9 +210,27 @@ function queryStatus(sceneId) {
     })
 }
 
+var parseString = require('xml2js').parseString;
 
+function getDeviceJSON() {
+    const xml = fs.readFileSync('show.xml')
+    parseString(xml, function (err, result) {
+        let devices = result.Configurations.ChannelDefList[0].ChannelDef;
+        devices = devices.map((device) => {
+            device = device['$'];
+            return {
+                "id": device.id,
+                "address": device.address,
+                "name": device.name,
+                "type": device.type
+            };
+        });
+        console.log(JSON.stringify(devices));
+    });
+}
+getDeviceJSON();
 // findController()
-readConfig()
+// readConfig()
 // controlScene(1)
 // controlUnit()
 // var biz_content = "欢迎关注！";
