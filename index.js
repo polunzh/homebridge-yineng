@@ -286,26 +286,6 @@ YinengAccessory.prototype.setValue = function (value, callback) {
     self.power = value;
     callback(null);
   });
-  // const client = dgram.createSocket('udp4');
-  // client.send(JSON.stringify(segment), PORT, IP, (err) => {
-  //   if (err) throw err;
-  // });
-
-  // client.on('message', function (message, remote) {
-  //   const messageJSON = JSON.parse(message.toString()).result;
-  //   if (messageJSON.code) {
-  //     console.log('err:' + messageJSON.code);
-  //   }
-
-  //   self.power = value;
-  //   client.close();
-  //   callback(null);
-  // });
-
-  // client.on('error', (err) => {
-  //   self.log('udp error:' + err.message);
-  //   callback(err);
-  // });
 };
 
 YinengAccessory.prototype.setBrightness = function (value, callback) {
@@ -320,24 +300,19 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
     }]
   });
 
-  const client = dgram.createSocket('udp4');
-  client.send(JSON.stringify(segment), PORT, IP, (err) => {
-    if (err) throw self.log('udp send error:' + err.message);
-  });
-
-  client.on('message', function (message, remote) {
-    const messageJSON = JSON.parse(message.toString()).result
-    if (messageJSON.code) {
-      self.log('return error code:' + messageJSON.code)
+  questQueue.push({
+    segment: segment,
+    log: self.log
+  }, (err, res) => {
+    if (err) {
+      self.log(err.message);
+      return callback(err);
     }
-    client.close()
-    callback(null)
-  })
+    self.log('Set value > ' + value);
 
-  client.on('error', (err) => {
-    self.log('udp error:' + err.message);
-    callback(err);
-  })
+    self.power = value;
+    callback(null);
+  });
 };
 
 YinengAccessory.prototype.getPower = function (callback) {
@@ -361,35 +336,6 @@ YinengAccessory.prototype.getPower = function (callback) {
     callback(null, value);
   });
 };
-// YinengAccessory.prototype.getPower = function (callback) {
-//   const self = this;
-//   const segment = getSegment({
-//     requestId: 4001,
-//     arguments: Number(self.device.id)
-//   });
-
-//   const client = dgram.createSocket('udp4')
-//   client.send(JSON.stringify(segment), PORT, IP, (err) => {
-//     if (err) throw err;
-//   });
-
-//   client.on('message', function (message, remote) {
-//     const messageJSON = JSON.parse(message.toString()).result
-//     if (messageJSON.code) {
-//       console.log('err:' + messageJSON.code)
-//     }
-
-//     client.close();
-//     const value = (messageJSON.data[0].state === '00000000' ? 0 : 1);
-//     self.log('Get power >>> ' + value);
-//     callback(null, value);
-//   });
-
-//   client.on('error', (err) => {
-//     self.log('udp error:' + err.message);
-//     callback(err);
-//   });
-// };
 
 YinengAccessory.prototype.setSaturation = (value, callback) => {
   const self = this;
