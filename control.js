@@ -4,8 +4,8 @@ const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
-const IP = '192.168.199.213'
-const CONTROLLER_ADDRESS = '328C5159'
+const IP = '192.168.0.103'
+const CONTROLLER_ADDRESS = '326B5129'
 
 function findController() {
     const client = dgram.createSocket('udp4')
@@ -229,12 +229,12 @@ function getDeviceJSON() {
     });
 }
 getDeviceJSON();
-// findController()
-// readConfig()
-// controlScene(1)
-// controlUnit()
+// findController();
+// readConfig();
+// controlScene(1);
+// controlUnit();
 // var biz_content = "欢迎关注！";
 // var gbkBytes = iconv.encode(biz_content, 'gbk');
-// console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'))
-// setStaticIP()
-// queryStatus()
+// console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'));
+// setStaticIP();
+// queryStatus();

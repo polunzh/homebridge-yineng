@@ -5,6 +5,7 @@ const iconv = require('iconv-lite');
 const fs = require('fs')
 const path = require('path');
 const rmdirSync = require('rmdir-sync');
+const async = require('async');
 
 let IP;
 let PORT;
@@ -14,22 +15,7 @@ const PLATFORM_NAME = 'Yineng';
 
 let CONTROL_ID;
 let CONTROLLER_ADDRESS;
-// const devices = [{
-//   id: 2,
-//   address: '1C06FBA1',
-//   name: '调光/调色温',
-//   type: 1008,
-// }, {
-//   id: 3,
-//   address: '430933A3',
-//   name: '调光',
-//   type: 1005,
-// }, {
-//   id: 4,
-//   address: '490BCE01',
-//   name: '普通回路',
-//   type: 1001,
-// }];
+let REQ_QUEUE = 0;
 
 module.exports = function (homebridge) {
   console.log("homebridge API version: " + homebridge.version);
@@ -159,50 +145,53 @@ YinengPlatform.prototype.configurationRequestHandler = function (context, reques
 }
 
 YinengPlatform.prototype.addAccessory = function () {
-  this.log("Add Accessory")
-  const platform = this
-  const existsKeys = Object.keys(this.accessories)
-  this.config.devices.forEach((device) => {
-    const uuid = UUIDGen.generate(CONTROL_ID + device.address)
-    const existKey = existsKeys.find((key) => {
-      return uuid === key
-    })
+  this.log("Add Accessory");
+  const platform = this;
+  const existsKeys = Object.keys(platform.accessories)
+  platform.config.devices.forEach((d, index) => {
+    (function (i, device) {
+      setTimeout(function () {
+        console.log(i + '|' + device.name);
+        const uuid = UUIDGen.generate(CONTROL_ID + device.address)
+        const existKey = existsKeys.find((key) => {
+          return uuid === key
+        })
 
-    if (existKey !== undefined) {
-      this.accessories[uuid] = new YinengAccessory(device, this.accessories[existKey], this.log);
-    } else {
-      this.log('new yineng device add...')
+        if (existKey !== undefined) {
+          platform.accessories[uuid] = new YinengAccessory(device, platform.accessories[existKey], platform.log);
+        } else {
+          let accessory = new PlatformAccessory(device.name, uuid);
+          accessory.context.name = device.name
+          accessory.context.make = "Yineng"
+          accessory.context.model = "Unknown"
 
-      let accessory = new PlatformAccessory(device.name, uuid);
+          accessory.getService(Service.AccessoryInformation)
+            .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
+            .setCharacteristic(Characteristic.Model, accessory.context.model)
 
-      accessory.context.name = device.name
-      accessory.context.make = "Yineng"
-      accessory.context.model = "Unknown"
+          let service;
+          switch (device.type) {
+            case '1001':
+              service = accessory.addService(Service.Lightbulb, device.name);
+              break;
+            case '1005':
+              service = accessory.addService(Service.Lightbulb, device.name);
+              service.addCharacteristic(Characteristic.Brightness);
+              break
+            case '1008':
+              service = accessory.addService(Service.Lightbulb, device.name);
+              break;
+            case '1007':
+              service = accessory.addService(Service.Switch, device.name);
+              break;
+          }
 
-      accessory.getService(Service.AccessoryInformation)
-        .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
-        .setCharacteristic(Characteristic.Model, accessory.context.model)
-
-      let service;
-      switch (device.type) {
-        case '1001':
-          service = accessory.addService(Service.Lightbulb, device.name);
-          break;
-        case '1005':
-          service = accessory.addService(Service.Lightbulb, device.name);
-          service.addCharacteristic(Characteristic.Brightness);
-          break
-        case '1008':
-          service = accessory.addService(Service.Lightbulb, device.name);
-          break;
-        case '1007':
-          service = accessory.addService(Service.Switch, device.name);
-          break;
-      }
-
-      this.accessories[accessory.UUID] = new YinengAccessory(device, accessory, this.log);
-      this.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
-    }
+          platform.accessories[accessory.UUID] = new YinengAccessory(device, accessory, platform.log);
+          platform.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
+          platform.log('new yineng device add...' + index);
+        }
+      }, i * 100);
+    })(index, d);
   })
 }
 
@@ -239,33 +228,7 @@ YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
       service.getCharacteristic(Characteristic.witch)
         .on('get', this.getPower.bind(this))
         .on('set', this.setValue.bind(this));
-
       break;
-      // case Kelvin:
-      //   service
-      //     .getCharacteristic(Kelvin)
-      //     .on('set', this.setSaturation.bind(this));
-
-      //   break;
-      // case Characteristic.Hue:
-      //   service
-      //     .getCharacteristic(Characteristic.Hue)
-      //     .on('set', this.setSaturation.bind(this));
-      //   break;
-      // case Characteristic.Saturation:
-      //   service
-      //     .getCharacteristic(Characteristic.Saturation)
-      //     .on('set', this.setSaturation.bind(this));
-      //   break;
-      // case Characteristic.ColorTemperature:
-      //   service.getCharacteristic(Characteristic.ColorTemperature)
-      //     .on('set', this.setSaturation.bind(this))
-      //     .setProps({
-      //       minValue: "01",
-      //       maxValue: "100"
-      //     });
-
-      //   break;
   }
 }
 
@@ -273,10 +236,6 @@ YinengAccessory.prototype.addEventHandlers = function () {
   this.addEventHandler(Service.Switch, Characteristic.On)
   this.addEventHandler(Service.Lightbulb, Characteristic.On)
   this.addEventHandler(Service.Lightbulb, Characteristic.Brightness)
-  // this.addEventHandler(Service.Lightbulb, Kelvin)
-  // this.addEventHandler(Service.Lightbulb, Characteristic.Hue)
-  // this.addEventHandler(Service.Lightbulb, Characteristic.Saturation)
-  // this.addEventHandler(Service.Lightbulb, Characteristic.ColorTemperature)
 }
 
 YinengPlatform.prototype.updateAccessoriesReachability = function () {
@@ -301,13 +260,12 @@ YinengAccessory.prototype.setValue = function (value, callback) {
     return;
   }
 
-
   if (this.device.type === '1007') {
     value = value ? 'FA' : 'FB'
   } else {
     value = value ? "FF" : "0";
   }
-  self.log('Set value > ' + value);
+
   const segment = getSegment({
     requestId: 3002,
     arguments: [{
@@ -315,27 +273,40 @@ YinengAccessory.prototype.setValue = function (value, callback) {
       "state": value
     }]
   });
-  const client = dgram.createSocket('udp4');
-  client.send(JSON.stringify(segment), PORT, IP, (err) => {
-    if (err) throw err;
-  });
-
-  client.on('message', function (message, remote) {
-    const messageJSON = JSON.parse(message.toString()).result;
-    if (messageJSON.code) {
-      console.log('err:' + messageJSON.code);
+  questQueue.push({
+    segment: segment,
+    log: self.log
+  }, (err, res) => {
+    if (err) {
+      self.log(err.message);
+      return callback(err);
     }
+    self.log('Set value > ' + value);
 
     self.power = value;
-    client.close();
     callback(null);
   });
+  // const client = dgram.createSocket('udp4');
+  // client.send(JSON.stringify(segment), PORT, IP, (err) => {
+  //   if (err) throw err;
+  // });
 
-  client.on('error', (err) => {
-    self.log('udp error:' + err.message);
-    callback(err);
-  });
-}
+  // client.on('message', function (message, remote) {
+  //   const messageJSON = JSON.parse(message.toString()).result;
+  //   if (messageJSON.code) {
+  //     console.log('err:' + messageJSON.code);
+  //   }
+
+  //   self.power = value;
+  //   client.close();
+  //   callback(null);
+  // });
+
+  // client.on('error', (err) => {
+  //   self.log('udp error:' + err.message);
+  //   callback(err);
+  // });
+};
 
 YinengAccessory.prototype.setBrightness = function (value, callback) {
   const self = this;
@@ -367,23 +338,74 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
     self.log('udp error:' + err.message);
     callback(err);
   })
-}
-
-YinengAccessory.prototype.updateReachability = function (device, reachable) {
-  this.device = device
-  this.accessory.updateReachability(reachable);
-}
+};
 
 YinengAccessory.prototype.getPower = function (callback) {
   const self = this;
   const segment = getSegment({
     requestId: 4001,
-    arguments: Number(this.device.id)
+    arguments: Number(self.device.id)
   });
+
+  questQueue.push({
+    segment: segment,
+    log: self.log
+  }, (err, res) => {
+    if (err) {
+      self.log(err.message);
+      return callback(err);
+    }
+
+    const value = (res.data[0].state === '00000000' ? 0 : 1);
+    self.log('Get power >>> ' + value);
+    callback(null, value);
+  });
+};
+// YinengAccessory.prototype.getPower = function (callback) {
+//   const self = this;
+//   const segment = getSegment({
+//     requestId: 4001,
+//     arguments: Number(self.device.id)
+//   });
+
+//   const client = dgram.createSocket('udp4')
+//   client.send(JSON.stringify(segment), PORT, IP, (err) => {
+//     if (err) throw err;
+//   });
+
+//   client.on('message', function (message, remote) {
+//     const messageJSON = JSON.parse(message.toString()).result
+//     if (messageJSON.code) {
+//       console.log('err:' + messageJSON.code)
+//     }
+
+//     client.close();
+//     const value = (messageJSON.data[0].state === '00000000' ? 0 : 1);
+//     self.log('Get power >>> ' + value);
+//     callback(null, value);
+//   });
+
+//   client.on('error', (err) => {
+//     self.log('udp error:' + err.message);
+//     callback(err);
+//   });
+// };
+
+YinengAccessory.prototype.setSaturation = (value, callback) => {
+  const self = this;
+  self.log('Set saturation > ' + d2h(value))
+
+  const segment = getSegment({
+    requestId: 3002,
+    arguments: [{
+      "id": Number(this.device.id),
+      "state": d2h(value)
+    }]
+  })
 
   const client = dgram.createSocket('udp4')
   client.send(JSON.stringify(segment), PORT, IP, (err) => {
-    if (err) throw err;
+    if (err) throw self.log(err.message);
   });
 
   client.on('message', function (message, remote) {
@@ -393,16 +415,42 @@ YinengAccessory.prototype.getPower = function (callback) {
     }
 
     client.close()
-    const value = (messageJSON.data[0].state === '00000000' ? 0 : 1);
-    self.log('Get power >>> ' + value);
-    callback(null, value);
+    callback(null)
   })
 
   client.on('error', (err) => {
     self.log('udp error:' + err.message);
     callback(err);
-  })
+  });
+}
+
+YinengAccessory.prototype.updateReachability = function (device, reachable) {
+  this.device = device
+  this.accessory.updateReachability(reachable);
 };
+
+const questQueue = async.queue(function (task, callback) {
+  const client = dgram.createSocket('udp4');
+  client.send(JSON.stringify(task.segment), PORT, IP, (err) => {
+    if (err) task.log(err.message);
+  });
+
+  client.on('message', function (message, remote) {
+    client.close();
+    const messageJSON = JSON.parse(message.toString()).result;
+    if (messageJSON.code) {
+      task.log('err:' + messageJSON.code);
+    }
+
+    callback(null, messageJSON);
+  });
+
+  client.on('error', (err) => {
+    client.close();
+    task.log('udp error:' + err.message);
+    callback(err);
+  });
+}, 3);
 
 function d2h(d) {
   return (+d).toString(16).toUpperCase();
@@ -421,37 +469,4 @@ function getSegment(option) {
       "arguments": option.arguments
     }
   };
-}
-
-YinengAccessory.prototype.setSaturation = function (value, callback) {
-  const self = this;
-  self.log('Set saturation > ' + d2h(value))
-
-  const segment = getSegment({
-    requestId: 3002,
-    arguments: [{
-      "id": Number(this.device.id),
-      "state": d2h(value)
-    }]
-  });
-
-  const client = dgram.createSocket('udp4')
-  client.send(JSON.stringify(segment), PORT, IP, (err) => {
-    if (err) throw err;
-  })
-
-  client.on('message', function (message, remote) {
-    const messageJSON = JSON.parse(message.toString()).result
-    if (messageJSON.code) {
-      console.log('err:' + messageJSON.code)
-    }
-
-    client.close()
-    callback(null)
-  })
-
-  client.on('error', (err) => {
-    self.log('udp error:' + err.message);
-    callback(err);
-  });
 }
