@@ -228,7 +228,7 @@ function getDeviceJSON() {
         console.log(JSON.stringify(devices));
     });
 }
-getDeviceJSON();
+// getDeviceJSON();
 // findController();
 // readConfig();
 // controlScene(1);
