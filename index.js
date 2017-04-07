@@ -6,16 +6,17 @@ const fs = require('fs')
 const path = require('path');
 const rmdirSync = require('rmdir-sync');
 const async = require('async');
+const parseString = require('xml2js').parseString;
 
 let IP;
 let PORT;
 let PASSWD;
-const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
-const PLATFORM_NAME = 'Yineng';
-
 let CONTROL_ID;
 let CONTROLLER_ADDRESS;
 let REQ_QUEUE = 0;
+const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
+const PLATFORM_NAME = 'Yineng';
+const BORADCAST = '192.168.0.255'
 
 module.exports = function (homebridge) {
   console.log("homebridge API version: " + homebridge.version);
@@ -145,54 +146,60 @@ YinengPlatform.prototype.configurationRequestHandler = function (context, reques
 }
 
 YinengPlatform.prototype.addAccessory = function () {
-  this.log("Add Accessory");
   const platform = this;
   const existsKeys = Object.keys(platform.accessories)
-  platform.config.devices.forEach((d, index) => {
-    (function (i, device) {
-      setTimeout(function () {
-        console.log(i + '|' + device.name);
-        const uuid = UUIDGen.generate(CONTROL_ID + device.address)
-        const existKey = existsKeys.find((key) => {
-          return uuid === key
-        })
+  platform.log("Add Accessory");
+  getDevices(this.log, (err, devices) => {
+    if (err) {
+      platform.log(err.message);
+      return;
+    }
+    devices.forEach((d, index) => {
+      (function (i, device) {
+        setTimeout(function () {
+          console.log(i + '|' + device.name);
+          const uuid = UUIDGen.generate(CONTROL_ID + device.address)
+          const existKey = existsKeys.find((key) => {
+            return uuid === key
+          })
 
-        if (existKey !== undefined) {
-          platform.accessories[uuid] = new YinengAccessory(device, platform.accessories[existKey], platform.log);
-        } else {
-          let accessory = new PlatformAccessory(device.name, uuid);
-          accessory.context.name = device.name
-          accessory.context.make = "Yineng"
-          accessory.context.model = "Unknown"
+          if (existKey !== undefined) {
+            platform.accessories[uuid] = new YinengAccessory(device, platform.accessories[existKey], platform.log);
+          } else {
+            let accessory = new PlatformAccessory(device.name, uuid);
+            accessory.context.name = device.name
+            accessory.context.make = "Yineng"
+            accessory.context.model = "Unknown"
 
-          accessory.getService(Service.AccessoryInformation)
-            .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
-            .setCharacteristic(Characteristic.Model, accessory.context.model)
+            accessory.getService(Service.AccessoryInformation)
+              .setCharacteristic(Characteristic.Manufacturer, accessory.context.make)
+              .setCharacteristic(Characteristic.Model, accessory.context.model)
 
-          let service;
-          switch (device.type) {
-            case '1001':
-              service = accessory.addService(Service.Lightbulb, device.name);
-              break;
-            case '1005':
-              service = accessory.addService(Service.Lightbulb, device.name);
-              service.addCharacteristic(Characteristic.Brightness);
-              break
-            case '1008':
-              service = accessory.addService(Service.Lightbulb, device.name);
-              break;
-            case '1007':
-              service = accessory.addService(Service.Switch, device.name);
-              break;
+            let service;
+            switch (device.type) {
+              case '1001':
+                service = accessory.addService(Service.Lightbulb, device.name);
+                break;
+              case '1005':
+                service = accessory.addService(Service.Lightbulb, device.name);
+                service.addCharacteristic(Characteristic.Brightness);
+                break
+              case '1008':
+                service = accessory.addService(Service.Lightbulb, device.name);
+                break;
+              case '1007':
+                service = accessory.addService(Service.Switch, device.name);
+                break;
+            }
+
+            platform.accessories[accessory.UUID] = new YinengAccessory(device, accessory, platform.log);
+            platform.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
+            platform.log('new yineng device add...' + index);
           }
-
-          platform.accessories[accessory.UUID] = new YinengAccessory(device, accessory, platform.log);
-          platform.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
-          platform.log('new yineng device add...' + index);
-        }
-      }, i * 100);
-    })(index, d);
-  })
+        }, i * 100);
+      })(index, d);
+    });
+  });
 }
 
 YinengAccessory.prototype.addEventHandler = function (service, characteristic) {
@@ -415,4 +422,128 @@ function getSegment(option) {
       "arguments": option.arguments
     }
   };
+}
+
+
+function getDevices(log, callback) {
+  let devices = []
+
+  findControls(log, (err, controls) => {
+    controls.forEach((control) => {
+      readConfig(control, log, (err, xmlConfig) => {
+        if (err) {
+          callback(err)
+        }
+
+        parseString(xmlConfig, function (err, result) {
+          if (err) {
+            callback(err)
+          }
+
+          let config = result.Configurations;
+          if (config.ChannelDefList && config.ChannelDefList[0].ChannelDef) {
+            devices = config.ChannelDefList[0].ChannelDef.map((val, indx) => {
+              val['$'].id = parseInt(val['$'].id)
+              val['$'].control = control
+              return val['$']
+            })
+
+            callback(null, devices)
+          }
+        })
+      })
+    })
+  })
+}
+
+
+function findControls(log, callback) {
+  const client = dgram.createSocket('udp4')
+  const segment = {
+    "request": {
+      "version": 1,
+      "serial_id": 123,
+      "from": "00000001",
+      "to": "FFFFFFFF",
+      "request_id": 1001,
+      "ack": 1,
+      "arguments": null
+    }
+  }
+
+  client.send(JSON.stringify(segment), PORT, BORADCAST, (err) => {
+    if (err) throw err;
+  })
+
+  client.on('listening', () => {
+    client.setBroadcast(true)
+  })
+
+  const controls = [];
+  client.on('message', function (message, remote) {
+    const messageJSON = JSON.parse(message.toString())
+    controls.push({
+      address: remote.address,
+      port: remote.port,
+      controlID: messageJSON.result.from
+    });
+  })
+
+  setTimeout(() => {
+    client.close();
+    callback(null, controls)
+  }, 2000)
+}
+
+
+function readConfig(control, log, callback) {
+  const segment = {
+    "request": {
+      "version": 1,
+      "serial_id": 123,
+      "from": "00000001",
+      "to": control.controlID,
+      "request_id": 2001,
+      "ack": 1,
+      "password": PASSWD,
+      "arguments": null
+    }
+  }
+
+  const client = dgram.createSocket('udp4')
+  client.setMaxListeners(5)
+  client.send(JSON.stringify(segment), PORT, control.address, (err) => {
+    if (err) throw err;
+  })
+
+  let configFile = {};
+  client.on('message', function (message, remote) {
+    const messageJSON = JSON.parse(message.toString()).result
+    configFile[messageJSON.packet_num] = messageJSON.data
+
+    if (Object.keys(configFile).length >= messageJSON.packet_count) {
+      client.close()
+
+      let configFileData = ''
+      for (let i = 1; i <= messageJSON.packet_count; i++) {
+        configFileData += configFile[i]
+      }
+
+      callback(null, Buffer.from(configFileData, 'hex').toString())
+    }
+  })
+
+  let timerId = setTimeout(() => {
+    client.close()
+    callback(new Error('read config file timeout'))
+  }, 10000)
+
+  client.on('close', () => {
+    clearTimeout(timerId);
+  });
+
+  client.on('error', (err) => {
+    log(err.message);
+    clearTimeout(timerId);
+  });
 }
