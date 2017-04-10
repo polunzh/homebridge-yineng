@@ -8,15 +8,10 @@ const rmdirSync = require('rmdir-sync');
 const async = require('async');
 const parseString = require('xml2js').parseString;
 
-let IP;
 let PORT;
 let PASSWD;
-let CONTROL_ID;
-let CONTROLLER_ADDRESS;
-let REQ_QUEUE = 0;
 const UUID_KELVIN = 'C4E24248-04AC-44AF-ACFF-40164E829DBA';
 const PLATFORM_NAME = 'Yineng';
-const BORADCAST = '192.168.0.255'
 
 module.exports = function (homebridge) {
   console.log("homebridge API version: " + homebridge.version);
@@ -73,11 +68,8 @@ function YinengPlatform(log, config, api) {
   this.config = config;
   this.accessories = [];
 
-  IP = this.config.ip;
-  PORT = this.config.port;
-  PASSWD = this.config.password;
-  CONTROL_ID = this.config.controlId;
-  CONTROLLER_ADDRESS = this.config.controllerAddress;
+  PORT = this.config.port || 10010;
+  PASSWD = this.config.password || '172168';
 
   if (api) {
     this.api = api
@@ -147,18 +139,18 @@ YinengPlatform.prototype.configurationRequestHandler = function (context, reques
 
 YinengPlatform.prototype.addAccessory = function () {
   const platform = this;
-  const existsKeys = Object.keys(platform.accessories)
+  const existsKeys = Object.keys(platform.accessories);
   platform.log("Add Accessory");
-  getDevices(this.log, (err, devices) => {
+  getDevices(this.log, this.config.broadcast, (err, devices) => {
     if (err) {
       platform.log(err.message);
       return;
     }
+
     devices.forEach((d, index) => {
       (function (i, device) {
         setTimeout(function () {
-          console.log(i + '|' + device.name);
-          const uuid = UUIDGen.generate(CONTROL_ID + device.address)
+          const uuid = UUIDGen.generate(device.control.id + device.address)
           const existKey = existsKeys.find((key) => {
             return uuid === key
           })
@@ -196,7 +188,7 @@ YinengPlatform.prototype.addAccessory = function () {
             platform.api.registerPlatformAccessories("homebridge-yineng", "Yineng", [accessory]);
             platform.log('new yineng device add...' + index);
           }
-        }, i * 100);
+        }, i * 200);
       })(index, d);
     });
   });
@@ -261,6 +253,7 @@ YinengPlatform.prototype.removeAccessory = function () {
 }
 
 YinengAccessory.prototype.setValue = function (value, callback) {
+  console.log('start set value' + value);
   const self = this;
   if (value === self.power) {
     callback(null);
@@ -275,12 +268,14 @@ YinengAccessory.prototype.setValue = function (value, callback) {
 
   const segment = getSegment({
     requestId: 3002,
+    control: self.device.control,
     arguments: [{
       "id": Number(self.device.id),
       "state": value
     }]
   });
   questQueue.push({
+    controlIP: this.device.control.address,
     segment: segment,
     log: self.log
   }, (err, res) => {
@@ -301,6 +296,7 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
   self.log('Set brightness > ' + d2h(value))
   const segment = getSegment({
     requestId: 3002,
+    control: self.device.control,
     arguments: [{
       "id": Number(this.device.id),
       "state": d2h(value)
@@ -309,6 +305,7 @@ YinengAccessory.prototype.setBrightness = function (value, callback) {
 
   questQueue.push({
     segment: segment,
+    controlIP: this.device.control.address,
     log: self.log
   }, (err, res) => {
     if (err) {
@@ -326,10 +323,12 @@ YinengAccessory.prototype.getPower = function (callback) {
   const self = this;
   const segment = getSegment({
     requestId: 4001,
+    control: self.device.control,
     arguments: Number(self.device.id)
   });
 
   questQueue.push({
+    controlIP: this.device.control.address,
     segment: segment,
     log: self.log
   }, (err, res) => {
@@ -344,47 +343,14 @@ YinengAccessory.prototype.getPower = function (callback) {
   });
 };
 
-YinengAccessory.prototype.setSaturation = (value, callback) => {
-  const self = this;
-  self.log('Set saturation > ' + d2h(value))
-
-  const segment = getSegment({
-    requestId: 3002,
-    arguments: [{
-      "id": Number(this.device.id),
-      "state": d2h(value)
-    }]
-  })
-
-  const client = dgram.createSocket('udp4')
-  client.send(JSON.stringify(segment), PORT, IP, (err) => {
-    if (err) throw self.log(err.message);
-  });
-
-  client.on('message', function (message, remote) {
-    const messageJSON = JSON.parse(message.toString()).result
-    if (messageJSON.code) {
-      console.log('err:' + messageJSON.code)
-    }
-
-    client.close()
-    callback(null)
-  })
-
-  client.on('error', (err) => {
-    self.log('udp error:' + err.message);
-    callback(err);
-  });
-}
-
 YinengAccessory.prototype.updateReachability = function (device, reachable) {
-  this.device = device
+  this.device = device;
   this.accessory.updateReachability(reachable);
 };
 
 const questQueue = async.queue(function (task, callback) {
   const client = dgram.createSocket('udp4');
-  client.send(JSON.stringify(task.segment), PORT, IP, (err) => {
+  client.send(JSON.stringify(task.segment), PORT, task.controlIP, (err) => {
     if (err) task.log(err.message);
   });
 
@@ -415,9 +381,9 @@ function getSegment(option) {
       "version": 1,
       "serial_id": 123,
       "from": "00000001",
-      "to": CONTROLLER_ADDRESS,
+      "to": option.control.controlID,
       "request_id": option.requestId,
-      "password": "172168",
+      "password": PASSWD,
       "ack": 1,
       "arguments": option.arguments
     }
@@ -425,19 +391,24 @@ function getSegment(option) {
 }
 
 
-function getDevices(log, callback) {
+function getDevices(log, broadcast, callback) {
   let devices = []
 
-  findControls(log, (err, controls) => {
+  findControls(log, broadcast, (err, controls) => {
+    if (err) {
+      return callback(err);
+    }
+
     controls.forEach((control) => {
       readConfig(control, log, (err, xmlConfig) => {
         if (err) {
-          callback(err)
+          log(err.message);
+          return;
         }
 
         parseString(xmlConfig, function (err, result) {
           if (err) {
-            callback(err)
+            return callback(err);
           }
 
           let config = result.Configurations;
@@ -446,9 +417,8 @@ function getDevices(log, callback) {
               val['$'].id = parseInt(val['$'].id)
               val['$'].control = control
               return val['$']
-            })
-
-            callback(null, devices)
+            });
+            callback(null, devices);
           }
         })
       })
@@ -457,7 +427,7 @@ function getDevices(log, callback) {
 }
 
 
-function findControls(log, callback) {
+function findControls(log, boradcast, callback) {
   const client = dgram.createSocket('udp4')
   const segment = {
     "request": {
@@ -471,12 +441,12 @@ function findControls(log, callback) {
     }
   }
 
-  client.send(JSON.stringify(segment), PORT, BORADCAST, (err) => {
+  client.send(JSON.stringify(segment), PORT, boradcast, (err) => {
     if (err) throw err;
   })
 
   client.on('listening', () => {
-    client.setBroadcast(true)
+    client.setBroadcast(true);
   })
 
   const controls = [];
@@ -487,12 +457,15 @@ function findControls(log, callback) {
       port: remote.port,
       controlID: messageJSON.result.from
     });
-  })
+  });
 
   setTimeout(() => {
     client.close();
-    callback(null, controls)
-  }, 2000)
+    if (controls.length === 0) {
+      return callback(new Error('没有找到控制器'));
+    }
+    callback(null, controls);
+  }, 10000);
 }
 
 
@@ -518,32 +491,26 @@ function readConfig(control, log, callback) {
 
   let configFile = {};
   client.on('message', function (message, remote) {
-    const messageJSON = JSON.parse(message.toString()).result
-    configFile[messageJSON.packet_num] = messageJSON.data
+    const messageJSON = JSON.parse(message.toString()).result;
+    configFile[messageJSON.packet_num] = messageJSON.data;
 
     if (Object.keys(configFile).length >= messageJSON.packet_count) {
-      client.close()
+      client.close();
 
       let configFileData = ''
       for (let i = 1; i <= messageJSON.packet_count; i++) {
-        configFileData += configFile[i]
+        configFileData += configFile[i];
       }
 
-      callback(null, Buffer.from(configFileData, 'hex').toString())
+      if (!configFileData) {
+        return callback(new Error('没有找到控制器'));
+      }
+
+      callback(null, Buffer.from(configFileData, 'hex').toString());
     }
   })
 
-  let timerId = setTimeout(() => {
-    client.close()
-    callback(new Error('read config file timeout'))
-  }, 10000)
-
-  client.on('close', () => {
-    clearTimeout(timerId);
-  });
-
   client.on('error', (err) => {
-    log(err.message);
-    clearTimeout(timerId);
+    callback(err);
   });
 }
