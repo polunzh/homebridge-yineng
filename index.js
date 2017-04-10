@@ -462,10 +462,10 @@ function findControls(log, boradcast, callback) {
   setTimeout(() => {
     client.close();
     if (controls.length === 0) {
-      return callback(new Error('没有找到控制器'));
+      return callback(new Error('can not find controller'));
     }
     callback(null, controls);
-  }, 10000);
+  }, 20000);
 }
 
 
@@ -487,6 +487,8 @@ function readConfig(control, log, callback) {
   client.setMaxListeners(5)
   client.send(JSON.stringify(segment), PORT, control.address, (err) => {
     if (err) throw err;
+
+    log('start read config');
   })
 
   let configFile = {};
@@ -503,9 +505,10 @@ function readConfig(control, log, callback) {
       }
 
       if (!configFileData) {
-        return callback(new Error('没有找到控制器'));
+        return callback(new Error(`can not get controller: ${control.address} config`));
       }
 
+      log('read config finished');
       callback(null, Buffer.from(configFileData, 'hex').toString());
     }
   })
