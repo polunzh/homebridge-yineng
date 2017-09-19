@@ -120,8 +120,8 @@ function controlUnit() {
             "password": "172168",
             "ack": 1,
             "arguments": [{
-                "id": 2,
-                "state": "0"
+                "id": 1,
+                "state": "4"
             }]
         }
     }
