@@ -4,6 +4,8 @@ const fs = require('fs')
 
 const PORT = 10010
 const PASSWD = '172168'
+const IP = '192.168.0.103'
+const CONTROLLER_ADDRESS = '326B5129'
 
 function findController() {
     const client = dgram.createSocket('udp4')
@@ -19,7 +21,7 @@ function findController() {
         }
     }
 
-    client.send(JSON.stringify(segment), PORT, '192.168.0.255', (err) => {
+    client.send(JSON.stringify(segment), PORT, '192.168.199.255', (err) => {
         if (err) throw err;
     })
 
@@ -45,7 +47,7 @@ function readConfig() {
             "version": 1,
             "serial_id": 123,
             "from": "00000001",
-            "to": "317A5167",
+            "to": CONTROLLER_ADDRESS,
             "request_id": 2001,
             "ack": 1,
             "password": PASSWD,
@@ -54,12 +56,13 @@ function readConfig() {
     }
 
     const client = dgram.createSocket('udp4')
-    client.send(JSON.stringify(segment), PORT, '192.168.0.124', (err) => {
+    client.send(JSON.stringify(segment), PORT, IP, (err) => {
         if (err) throw err;
     })
 
     let configFile = {};
     client.on('message', function (message, remote) {
+        console.log('---------received message----------')
         const messageJSON = JSON.parse(message.toString()).result
         configFile[messageJSON.packet_num] = messageJSON.data
 
@@ -70,14 +73,14 @@ function readConfig() {
             for (let i = 1; i <= messageJSON.packet_count; i++) {
                 configFileData += configFile[i]
             }
-            fs.writeFileSync('controller.xml', Buffer.from(configFileData, 'hex'));
+            fs.writeFileSync(Date.now() + '.xml', Buffer.from(configFileData, 'hex'));
         }
-
-        setTimeout(() => {
-            client.close()
-            throw new Error('read config file timeout')
-        }, 10000)
     })
+
+    setTimeout(() => {
+        client.close()
+        throw new Error('read config file timeout')
+    }, 10000)
 }
 
 function controlScene(sceneId) {
@@ -106,7 +109,6 @@ function controlScene(sceneId) {
         console.log(JSON.parse(message.toString()))
         client.close()
     })
-
 }
 
 function controlUnit() {
@@ -140,11 +142,99 @@ function controlUnit() {
 
 }
 
+function setStaticIP() {
+    const segment = {
+        "request": {
+            "version": 1,
+            "serial_id": 123,
+            "from": "00000001",
+            "to": "317A5167",
+            "request_id": 1005,
+            "password": "172168",
+            "ack": 1,
+            "arguments": {
+                "interface": 1,
+                "mode": "static",
+                "addr": {
+                    "ip": "192.168.10.124",
+                    "netmask": "255.255.255.0",
+                    "gateway": "192.168.10.1",
+                }
+            }
+        }
+    }
 
-// findController()
-// readConfig()
-// controlScene(1)
-controlUnit()
+    const client = dgram.createSocket('udp4')
+    client.send(JSON.stringify(segment), PORT, '192.168.0.102', (err) => {
+        if (err) throw err;
+    })
+
+    client.on('message', function (message, remote) {
+        const messageJSON = JSON.parse(message.toString()).result.data
+        // console.log(Buffer.from(messageJSON, 'hex').toString())
+        console.log(JSON.parse(message.toString()))
+        client.close()
+    })
+}
+
+function queryStatus(sceneId) {
+    const segment = {
+        "request": {
+            "version": 1,
+            "serial_id": 123,
+            "from": "00000001",
+            "to": "317A5167",
+            "request_id": 4001,
+            "password": "172168",
+            "ack": 1,
+            "arguments": 4
+        }
+    }
+
+
+
+    const client = dgram.createSocket('udp4')
+    client.send(JSON.stringify(segment), PORT, IP, (err) => {
+        if (err) throw err;
+    })
+
+    client.on('message', function (message, remote) {
+        const messageJSON = JSON.parse(message.toString()).result
+        console.log(messageJSON.data)
+        client.close()
+    })
+
+    client.on('error', (err) => {
+        console.log('ERROR: \n')
+        console.log(err);
+    })
+}
+
+var parseString = require('xml2js').parseString;
+
+function getDeviceJSON() {
+    const xml = fs.readFileSync('show.xml')
+    parseString(xml, function (err, result) {
+        let devices = result.Configurations.ChannelDefList[0].ChannelDef;
+        devices = devices.map((device) => {
+            device = device['$'];
+            return {
+                "id": device.id,
+                "address": device.address,
+                "name": device.name,
+                "type": device.type
+            };
+        });
+        console.log(JSON.stringify(devices));
+    });
+}
+// getDeviceJSON();
+// findController();
+// readConfig();
+// controlScene(1);
+// controlUnit();
 // var biz_content = "欢迎关注！";
 // var gbkBytes = iconv.encode(biz_content, 'gbk');
-// console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'))
+// console.log(iconv.decode(Buffer.from('&#20840;&#24320;', ''), 'GBK'));
+// setStaticIP();
+// queryStatus();
