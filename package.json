@@ -9,8 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.2.0",
+    "async": "^2.3.0",
     "iconv-lite": "^0.4.15",
+    "rmdir-sync": "^1.0.1",
     "xml2js": "^0.4.17"
   },
   "keywords": [
